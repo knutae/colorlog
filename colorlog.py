@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import re, sys
+import re, sys, argparse
 
 BLACK = '30'
 RED = '31'
@@ -17,7 +17,18 @@ def colorize_line(line, fg_color, bright):
     brightness = '1' if bright else '0'
     return prefix + brightness + ';' + str(fg_color) + suffix + line + prefix + suffix
 
+def colorize_stream(rules, input, output):
+    for line in input:
+        for regex, col, bright in rules:
+            if regex.search(line) is not None:
+                line = colorize_line(line, col, bright)
+                break
+        output.write(line)
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('files', nargs='*')
+    args = parser.parse_args()
     rules = [
         (re.compile('TRACE'), GRAY, False),
         (re.compile('INFO'), GREEN, True),
@@ -26,9 +37,9 @@ if __name__ == '__main__':
         (re.compile('ERROR'), RED, True),
         (re.compile('FATAL'), MAGENTA, True),
     ]
-    for line in sys.stdin:
-        for regex, col, bright in rules:
-            if regex.search(line) is not None:
-                line = colorize_line(line, col, bright)
-                break
-        sys.stdout.write(line)
+    if len(args.files) > 0:
+        for fname in args.files:
+            with open(fname) as f:
+                colorize_stream(rules, f, sys.stdout)
+    else:
+        colorize_stream(rules, sys.stdin, sys.stdout)

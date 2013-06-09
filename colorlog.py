@@ -11,31 +11,30 @@ MAGENTA = '35'
 CYAN = '36'
 GRAY = '37'
 
-def colorize_line(line, fg_color, bright):
-    prefix = '\x1b['
-    suffix = 'm'
+LINE_SUFFIX = '\x1b[m'
+
+def line_prefix(fg_color, bright):
     brightness = '1' if bright else '0'
-    return prefix + brightness + ';' + str(fg_color) + suffix + line + prefix + suffix
+    return '\x1b[' + brightness + ';' + str(fg_color) + 'm'
 
 class RuleProcessor:
     def __init__(self, rules):
-        self.rulemap = dict()
+        self.prefixmap = dict()
         for keyword, color, bright in rules:
-            self.rulemap[keyword] = (color, bright)
-        self.regex = re.compile('(' + '|'.join(self.rulemap.keys()) + ')')
+            self.prefixmap[keyword] = line_prefix(color, bright)
+        self.regex = re.compile('(' + '|'.join(self.prefixmap.keys()) + ')')
     
-    def process_line(self, line):
+    def process_line(self, line, output):
         m = self.regex.search(line)
         if m is None:
-            return line
+            output.write(line)
+            return
         keyword = m.group()
-        color, bright = self.rulemap[keyword]
-        return colorize_line(line, color, bright)
+        output.write(self.prefixmap[keyword] + line + LINE_SUFFIX)
     
     def process_stream(self, input, output):
         for line in input:
-            line = self.process_line(line)
-            output.write(line)
+            self.process_line(line, output)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

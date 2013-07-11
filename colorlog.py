@@ -33,7 +33,8 @@ class RuleProcessor:
         output.write(self.prefixmap[keyword] + line + LINE_SUFFIX)
     
     def process_stream(self, input, output):
-        for line in input:
+        # the following provides better streaming behavior (less buffering) than "for line in input"
+        for line in iter(input.readline, ''):
             self.process_line(line, output)
 
 if __name__ == '__main__':

@@ -37,7 +37,7 @@ class RuleProcessor:
         for line in iter(input.readline, ''):
             self.process_line(line, output)
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-L', '--less', action='store_true', help="view output in less (pipe to 'less -R')")
     parser.add_argument('files', nargs='*', help='files to read (if empty, read standard input)')
@@ -72,3 +72,6 @@ if __name__ == '__main__':
     if process is not None:
         process.stdin.close()
         process.wait()
+
+if __name__ == '__main__':
+    main()
